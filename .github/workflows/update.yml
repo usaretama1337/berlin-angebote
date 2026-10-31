@@ -1,14 +1,15 @@
-name: Update offers
+name: Deploy site
 
+# Акции собирает ваш компьютер (REWE и EDEKA не пускают серверы GitHub)
+# и загружает site/offers.json. Каждая такая загрузка обновляет сайт.
 on:
-  schedule:
-    # Понедельник и четверг, около 6–7 утра по Берлину
-    # (ALDI Nord выкладывает вторую волну акций по четвергам)
-    - cron: "0 5 * * 1,4"
+  push:
+    branches: [main]
+    paths: ["site/**"]
   workflow_dispatch: {}
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -17,48 +18,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  update:
+  deploy:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install
-        run: |
-          pip install -r requirements.txt
-          python -m playwright install --with-deps chromium
-
-      - name: Collect offers
-        run: python scraper/scrape.py
-
-      - name: Save debug files
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug
-          path: debug/
-          if-no-files-found: ignore
-          retention-days: 7
-
-      - name: Commit offers.json
-        run: |
-          git config user.name "offers-bot"
-          git config user.email "offers-bot@users.noreply.github.com"
-          git add site/offers.json
-          git diff --cached --quiet || git commit -m "Акции: $(date +%F)"
-          git push
-
       - uses: actions/configure-pages@v5
-
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
-
       - id: deploy
         uses: actions/deploy-pages@v4
