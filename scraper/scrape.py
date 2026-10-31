@@ -23,7 +23,7 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 
 from categories import categorize, categories_for_site
-from config import MIN_OFFERS, STORES
+from config import HEADLESS, MIN_OFFERS, STORES
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / "site" / "offers.json"
@@ -186,6 +186,8 @@ def normalize(raw, store_id):
     if len(title) < 3 or title.lower() in JUNK_TITLES or not re.search(r"[A-Za-zÄÖÜäöüß]", title):
         return None
     brand = raw.get("brand")
+    if brand and brand.isupper() and len(brand) > 3:
+        brand = " ".join(w[:1].upper() + w[1:].lower() for w in brand.split())
     full = f"{brand} {title}" if brand and brand.lower() not in title.lower() else title
     price = raw["price"]
     old = raw.get("old_price")
@@ -211,8 +213,21 @@ def normalize(raw, store_id):
         "discount": discount,
         "unit": unit,
         "image": raw.get("image"),
+        "link": raw.get("link"),
+        "from": valid_from(raw.get("section")),
         "category": categorize(f"{full} {unit or ''}"),
     }
+
+
+WEEKDAYS = {"mo": "пн", "di": "вт", "mi": "ср", "do": "чт", "fr": "пт", "sa": "сб"}
+
+
+def valid_from(section):
+    """'Ab-Do--29-10--Kindermode' -> 'с чт 29.10'"""
+    m = re.match(r"ab-(mo|di|mi|do|fr|sa)\W*-+(\d{1,2})-(\d{1,2})", section or "", re.I)
+    if not m:
+        return None
+    return f"с {WEEKDAYS[m.group(1).lower()]} {int(m.group(2)):02d}.{int(m.group(3)):02d}"
 
 
 def merge(offers):
@@ -270,6 +285,43 @@ DOM_JS = """() => {
 }"""
 
 
+ALDI_JS = """() => [...document.querySelectorAll('.product-tile')].map(t => {
+  const txt = (sel) => { const e = t.querySelector(sel); return e ? e.textContent.replace(/\\s+/g, ' ').trim() : null; };
+  const img = t.querySelector('img');
+  const a = t.querySelector('a.product-tile__action, a[href*="/produkt/"]');
+  const sec = t.closest('[data-hash]');
+  return {
+    brand: txt('[class*="brand-name"]'),
+    title: txt('[class*="product-name"]'),
+    price: txt('.tag__current') || txt('[class*="current-price"]'),
+    old_price: txt('.tag__cross-price') || txt('.strike-price'),
+    badge: txt('.tag__promo'),
+    unit: txt('.tag__marker--salesunit'),
+    image: img ? (img.currentSrc || img.src || null) : null,
+    link: a ? a.href : null,
+    section: sec ? sec.getAttribute('data-hash') : null,
+  };
+})"""
+
+# Признаки страницы-заглушки, которую защита сайта показывает вместо акций
+BLOCK_MARKERS = ("access denied", "waf block", "attention required",
+                 "just a moment", "request unsuccessful", "you don't have permission",
+                 "zugriff verweigert")
+
+
+class Blocked(Exception):
+    pass
+
+
+async def check_blocked(page):
+    try:
+        head = ((await page.title()) + " " + (await page.inner_text("body"))[:3000]).lower()
+    except Exception:
+        return
+    if any(m in head for m in BLOCK_MARKERS):
+        raise Blocked("сайт магазина заблокировал доступ")
+
+
 async def accept_cookies(page):
     for sel in ("#onetrust-accept-btn-handler", "[data-testid='uc-accept-all-button']",
                 "#uc-btn-accept-banner", "button[data-accept-action='all']"):
@@ -306,6 +358,7 @@ async def load_everything(page):
 async def scrape_store(browser, store):
     ctx = await browser.new_context(locale="de-DE", timezone_id="Europe/Berlin",
                                     user_agent=UA, viewport={"width": 1366, "height": 900})
+    await ctx.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
     page = await ctx.new_page()
     payloads, tasks = [], []
 
@@ -322,11 +375,22 @@ async def scrape_store(browser, store):
     try:
         await page.goto(store["url"], wait_until="domcontentloaded", timeout=60000)
         await page.wait_for_timeout(2500)
+        await check_blocked(page)
         await accept_cookies(page)
         await load_everything(page)
+        await check_blocked(page)
         await asyncio.gather(*tasks, return_exceptions=True)
 
         raw, stats = [], []
+        source = "json"
+        if store.get("parser") == "aldi":
+            source = "aldi"
+            for item in await page.evaluate(ALDI_JS):
+                price = parse_price(item.get("price"))
+                if item.get("title") and price:
+                    item["price"] = price
+                    item["old_price"] = parse_price(item.get("old_price"))
+                    raw.append(item)
         for url, data in payloads:
             found = []
             find_offers(data, found)
@@ -337,7 +401,6 @@ async def scrape_store(browser, store):
                     json.dumps(data, ensure_ascii=False)[:2_000_000], encoding="utf-8")
         for data in await page.evaluate(EMBEDDED_JS):
             find_offers(data, raw)
-        source = "json"
         if len(raw) < MIN_OFFERS:
             source = "dom"
             for item in await page.evaluate(DOM_JS):
@@ -378,7 +441,7 @@ async def main():
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(
-            headless=True, args=["--disable-blink-features=AutomationControlled"])
+            headless=HEADLESS, args=["--disable-blink-features=AutomationControlled"])
         for store in STORES:
             meta = {"name": store["name"], "color": store["color"], "url": store["url"]}
             if not store["url"].strip():
@@ -394,6 +457,8 @@ async def main():
                                        "updated": now, "count": len(offers)}
             except Exception as e:
                 print(f"{store['name']}: ошибка: {e}", file=sys.stderr)
+                if isinstance(e, Blocked):
+                    e = "blocked"
                 offers = [o for o in prev.get("offers", []) if o.get("store") == store["id"]]
                 old = prev.get("stores", {}).get(store["id"], {})
                 status[store["id"]] = {**meta, "ok": False, "error": str(e)[:200],

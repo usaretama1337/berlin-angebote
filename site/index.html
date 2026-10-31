@@ -172,6 +172,9 @@ body::before {
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 .unit { color: var(--muted); font-size: .85rem; }
+.name a { color: inherit; text-decoration: none; }
+.name a:hover { text-decoration: underline; text-underline-offset: 2px; }
+.from { font-size: .82rem; font-weight: 600; }
 .store { margin-top: auto; padding-top: 6px; font-size: .82rem; font-weight: 700; color: var(--c); }
 @media (prefers-color-scheme: dark) { .store { filter: brightness(1.9) saturate(.8); } }
 
@@ -293,8 +296,9 @@ code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size:
       </div>
       <div class="body">
         ${o.old_price ? `<span class="was">было <s>${fmt.format(o.old_price)} €</s></span>` : ""}
-        <h3 class="name">${esc(o.title)}</h3>
+        <h3 class="name">${o.link ? `<a href="${esc(o.link)}" target="_blank" rel="noopener">${esc(o.title)}</a>` : esc(o.title)}</h3>
         ${o.unit ? `<span class="unit">${esc(o.unit)}</span>` : ""}
+        ${o.from ? `<span class="from">${esc(o.from)}</span>` : ""}
         <span class="store">${esc(s.name)}</span>
       </div>
     </article>`;
@@ -362,8 +366,11 @@ code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size:
           { weekday: "short", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
       }
       const failed = Object.values(d.stores).filter((s) => !s.ok);
+      const since = (s) => s.updated ? ", показаны прошлые от " + new Date(s.updated).toLocaleDateString("ru-RU", { day: "numeric", month: "long" }) : "";
       $("notices").innerHTML = failed.map((s) => s.error === "no_url"
         ? `<p class="notice"><b>${esc(s.name)}</b>: ссылка на страницу акций ещё не указана в <code>scraper/config.py</code>.</p>`
+        : s.error === "blocked"
+        ? `<p class="notice"><b>${esc(s.name)}</b>: сайт магазина не пустил сборщик${since(s)}.</p>`
         : `<p class="notice"><b>${esc(s.name)}</b>: свежие акции загрузить не удалось, показаны прошлые${s.updated ? " от " + new Date(s.updated).toLocaleDateString("ru-RU", { day: "numeric", month: "long" }) : ""}.</p>`
       ).join("");
       renderStores();
