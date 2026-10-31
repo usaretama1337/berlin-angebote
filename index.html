@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Акции недели в Берлине</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏷️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #EDF0F2;
+  --surface: #FFFFFF;
+  --media: #FFFFFF;
+  --ink: #18202A;
+  --muted: #5B6672;
+  --line: #D3D9DF;
+  --tag: #FFD21F;
+  --tag-ink: #1A1400;
+  --sale: #D7261E;
+  --chip: #E2E7EB;
+  --chip-on: #18202A;
+  --chip-on-ink: #FFFFFF;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #12161B;
+    --surface: #1C2128;
+    --media: #EEF0F2;
+    --ink: #E8ECF0;
+    --muted: #9AA5B1;
+    --line: #2D343D;
+    --sale: #FF5A4E;
+    --chip: #252B33;
+    --chip-on: #E8ECF0;
+    --chip-on-ink: #12161B;
+  }
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 150px); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+}
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+
+header.top { padding-top: 28px; padding-bottom: 8px; }
+.title-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 24px; }
+h1 {
+  margin: 0;
+  font-stretch: 70%;
+  font-weight: 900;
+  font-size: clamp(2.4rem, 7vw, 4.2rem);
+  line-height: .95;
+  letter-spacing: -.01em;
+}
+.sub { margin: 6px 0 0; color: var(--muted); }
+.updated { color: var(--muted); font-size: .9rem; }
+
+.bar {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 5;
+  background: var(--bg);
+  padding: 12px 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg);
+}
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.search {
+  flex: 1 1 260px;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.select {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.stores { display: flex; gap: 6px; flex-wrap: wrap; }
+.store-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+  font-weight: 600;
+}
+.store-btn .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.store-btn[aria-pressed="false"] { opacity: .45; }
+.store-btn[aria-pressed="false"] .dot { background: transparent; box-shadow: inset 0 0 0 2px var(--c); }
+
+.chips { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 2px; scrollbar-width: thin; }
+.chip {
+  flex: none;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--chip);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.chip .n { color: var(--muted); margin-left: 4px; font-size: .85em; }
+.chip[aria-pressed="true"] { background: var(--chip-on); color: var(--chip-on-ink); }
+.chip[aria-pressed="true"] .n { color: inherit; opacity: .7; }
+.chip:disabled { opacity: .4; cursor: default; }
+
+.notice { margin: 14px 0 0; padding: 10px 14px; border-left: 4px solid var(--sale); background: var(--surface); }
+.status { margin: 16px 0 4px; color: var(--muted); font-size: .9rem; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  gap: 14px;
+  padding: 8px 0 48px;
+}
+.card {
+  display: flex; flex-direction: column;
+  background: var(--surface);
+  border-top: 4px solid var(--c);
+  border-radius: 4px 4px 10px 10px;
+  overflow: hidden;
+}
+.media { position: relative; aspect-ratio: 1; background: var(--media); }
+.media img { width: 100%; height: 100%; object-fit: contain; padding: 14px 14px 26px; }
+.media .noimg {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 2.6rem; padding-bottom: 14px;
+}
+.off {
+  position: absolute; top: 8px; right: 8px;
+  background: var(--sale); color: #fff;
+  font-weight: 800; font-stretch: 80%;
+  padding: 2px 7px; border-radius: 4px; font-size: .95rem;
+}
+.tag {
+  position: absolute; left: 10px; bottom: -16px;
+  display: inline-flex; align-items: baseline; gap: 3px;
+  background: var(--tag); color: var(--tag-ink);
+  padding: 4px 12px 5px 18px;
+  clip-path: polygon(11px 0, 100% 0, 100% 100%, 11px 100%, 0 50%);
+  font-stretch: 62%; font-weight: 900; font-size: 2.05rem; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.tag small { font-size: 1rem; font-weight: 800; }
+.body { padding: 24px 12px 12px; display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.was { color: var(--muted); font-size: .88rem; }
+.was s { text-decoration-thickness: 1.5px; }
+.name {
+  margin: 2px 0 0; font-weight: 600; font-size: .98rem; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.unit { color: var(--muted); font-size: .85rem; }
+.store { margin-top: auto; padding-top: 6px; font-size: .82rem; font-weight: 700; color: var(--c); }
+@media (prefers-color-scheme: dark) { .store { filter: brightness(1.9) saturate(.8); } }
+
+.empty { padding: 48px 0 64px; max-width: 34em; }
+.empty h2 { font-stretch: 75%; font-weight: 800; font-size: 1.8rem; margin: 0 0 8px; line-height: 1.1; }
+.empty p { margin: 0 0 14px; color: var(--muted); }
+.btn {
+  padding: 10px 16px; border: 0; border-radius: 10px;
+  background: var(--chip-on); color: var(--chip-on-ink); font-weight: 700; cursor: pointer;
+}
+code { background: var(--chip); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+
+@media (max-width: 560px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tag { font-size: 1.75rem; }
+  .select { flex: 1 1 40%; min-width: 0; font-size: .9rem; padding: 9px 8px; }
+  .stores { width: 100%; }
+  .store-btn { flex: 1 1 40%; justify-content: center; padding: 8px 6px; font-size: .9rem; }
+  .bar { position: static; }
+}
+</style>
+</head>
+<body>
+<header class="top wrap">
+  <div class="title-row">
+    <h1>Акции недели</h1>
+    <span class="updated" id="updated"></span>
+  </div>
+  <p class="sub">REWE, EDEKA Riebe и ALDI Nord в Берлине</p>
+</header>
+
+<div class="bar">
+  <div class="wrap">
+    <div class="controls">
+      <input class="search" id="q" type="search" placeholder="Найти товар, например «Cola» или «Käse»" aria-label="Поиск по товарам">
+      <select class="select" id="sort" aria-label="Сортировка">
+        <option value="discount">Сначала скидки</option>
+        <option value="price">Сначала дешёвые</option>
+        <option value="name">По названию</option>
+      </select>
+      <select class="select" id="min" aria-label="Размер скидки">
+        <option value="0">Любая скидка</option>
+        <option value="20">Скидка от 20 %</option>
+        <option value="30">Скидка от 30 %</option>
+        <option value="50">Скидка от 50 %</option>
+      </select>
+      <div class="stores" id="stores"></div>
+    </div>
+    <div class="chips" id="chips" role="toolbar" aria-label="Группы товаров"></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <div id="notices"></div>
+  <p class="status" id="status" aria-live="polite"></p>
+  <div class="grid" id="grid"></div>
+  <div id="empty"></div>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const fmt = new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const norm = (s) => String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ß/g, "ss");
+
+  let data = null;
+  const state = { cat: "all", stores: new Set(), q: "", sort: "discount", min: 0 };
+
+  try {
+    const saved = JSON.parse(localStorage.getItem("angebote-prefs") || "{}");
+    if (saved.sort) state.sort = saved.sort;
+    if (saved.min) state.min = Number(saved.min);
+    if (Array.isArray(saved.off)) state.offStores = new Set(saved.off);
+  } catch (e) {}
+
+  function savePrefs() {
+    try {
+      const off = Object.keys(data.stores).filter((s) => !state.stores.has(s));
+      localStorage.setItem("angebote-prefs", JSON.stringify({ sort: state.sort, min: state.min, off }));
+    } catch (e) {}
+  }
+
+  function matches(o, ignoreCat) {
+    if (!state.stores.has(o.store)) return false;
+    if (!ignoreCat && state.cat !== "all" && o.category !== state.cat) return false;
+    if (state.min && !(o.discount >= state.min)) return false;
+    if (state.q && !o._search.includes(state.q)) return false;
+    return true;
+  }
+
+  function renderStores() {
+    $("stores").innerHTML = Object.entries(data.stores).filter(([, s]) => s.count > 0).map(([id, s]) =>
+      `<button class="store-btn" style="--c:${esc(s.color)}" data-store="${esc(id)}" aria-pressed="${state.stores.has(id)}"><span class="dot"></span>${esc(s.name)}</button>`
+    ).join("");
+  }
+
+  function renderChips() {
+    const pool = data.offers.filter((o) => matches(o, true));
+    const counts = {};
+    pool.forEach((o) => { counts[o.category] = (counts[o.category] || 0) + 1; });
+    const cats = data.categories.filter((c) => counts[c.id] || c.id === state.cat);
+    $("chips").innerHTML =
+      `<button class="chip" data-cat="all" aria-pressed="${state.cat === "all"}">Все<span class="n">${pool.length}</span></button>` +
+      cats.map((c) => `<button class="chip" data-cat="${esc(c.id)}" aria-pressed="${state.cat === c.id}">${c.emoji} ${esc(c.label)}<span class="n">${counts[c.id] || 0}</span></button>`).join("");
+  }
+
+  function card(o) {
+    const s = data.stores[o.store] || { name: o.store, color: "#888" };
+    const cat = data.categories.find((c) => c.id === o.category);
+    const [euro, cent] = fmt.format(o.price).split(",");
+    const img = o.image
+      ? `<img src="${esc(o.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'noimg',textContent:'${cat ? cat.emoji : "📦"}'}))">`
+      : `<span class="noimg">${cat ? cat.emoji : "📦"}</span>`;
+    return `<article class="card" style="--c:${esc(s.color)}">
+      <div class="media">${img}
+        ${o.discount ? `<span class="off">−${o.discount} %</span>` : ""}
+        <span class="tag">${euro},${cent}<small>€</small></span>
+      </div>
+      <div class="body">
+        ${o.old_price ? `<span class="was">было <s>${fmt.format(o.old_price)} €</s></span>` : ""}
+        <h3 class="name">${esc(o.title)}</h3>
+        ${o.unit ? `<span class="unit">${esc(o.unit)}</span>` : ""}
+        <span class="store">${esc(s.name)}</span>
+      </div>
+    </article>`;
+  }
+
+  function render() {
+    renderChips();
+    let list = data.offers.filter((o) => matches(o, false));
+    const by = {
+      discount: (a, b) => (b.discount || 0) - (a.discount || 0) || a.price - b.price,
+      price: (a, b) => a.price - b.price,
+      name: (a, b) => a.title.localeCompare(b.title, "de"),
+    }[state.sort];
+    list.sort(by);
+    $("grid").innerHTML = list.map(card).join("");
+    $("status").textContent = list.length ? `Найдено товаров: ${list.length}` : "";
+    $("empty").innerHTML = list.length ? "" : `<div class="empty">
+      <h2>Ничего не найдено</h2>
+      <p>Под эти условия не подошёл ни один товар. Сбросьте фильтры, чтобы снова увидеть все акции.</p>
+      <button class="btn" id="reset">Сбросить фильтры</button></div>`;
+  }
+
+  function showSetup(title, text) {
+    $("grid").innerHTML = "";
+    $("empty").innerHTML = `<div class="empty"><h2>${title}</h2><p>${text}</p></div>`;
+  }
+
+  document.addEventListener("click", (e) => {
+    const chip = e.target.closest(".chip");
+    if (chip) { state.cat = chip.dataset.cat; render(); return; }
+    const st = e.target.closest(".store-btn");
+    if (st) {
+      const id = st.dataset.store;
+      state.stores.has(id) ? state.stores.delete(id) : state.stores.add(id);
+      st.setAttribute("aria-pressed", state.stores.has(id));
+      savePrefs(); render(); return;
+    }
+    if (e.target.id === "reset") {
+      state.cat = "all"; state.q = ""; state.min = 0;
+      state.stores = new Set(Object.keys(data.stores));
+      $("q").value = ""; $("min").value = "0";
+      renderStores(); savePrefs(); render();
+    }
+  });
+  $("q").addEventListener("input", (e) => { state.q = norm(e.target.value.trim()); render(); });
+  $("sort").addEventListener("change", (e) => { state.sort = e.target.value; savePrefs(); render(); });
+  $("min").addEventListener("change", (e) => { state.min = Number(e.target.value); savePrefs(); render(); });
+
+  fetch("offers.json?" + Date.now(), { cache: "no-store" })
+    .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then((d) => {
+      data = d;
+      if (!d.offers || !d.offers.length) {
+        showSetup("Акций пока нет", "Сборщик ещё не запускался. Откройте репозиторий на GitHub, вкладку <b>Actions</b>, выберите <b>Update offers</b> и нажмите <b>Run workflow</b>. Через несколько минут здесь появятся товары.");
+        return;
+      }
+      d.offers.forEach((o) => { o._search = norm(o.title + " " + (o.unit || "")); });
+      const off = state.offStores || new Set();
+      state.stores = new Set(Object.keys(d.stores).filter((s) => !off.has(s)));
+      if (!state.stores.size) state.stores = new Set(Object.keys(d.stores));
+      $("sort").value = state.sort;
+      $("min").value = String(state.min);
+      if (d.updated) {
+        $("updated").textContent = "Обновлено " + new Date(d.updated).toLocaleString("ru-RU",
+          { weekday: "short", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+      }
+      const failed = Object.values(d.stores).filter((s) => !s.ok);
+      $("notices").innerHTML = failed.map((s) => s.error === "no_url"
+        ? `<p class="notice"><b>${esc(s.name)}</b>: ссылка на страницу акций ещё не указана в <code>scraper/config.py</code>.</p>`
+        : `<p class="notice"><b>${esc(s.name)}</b>: свежие акции загрузить не удалось, показаны прошлые${s.updated ? " от " + new Date(s.updated).toLocaleDateString("ru-RU", { day: "numeric", month: "long" }) : ""}.</p>`
+      ).join("");
+      renderStores();
+      render();
+    })
+    .catch(() => showSetup("Файл с акциями не найден",
+      "Сайт не смог открыть <code>offers.json</code>. Проверьте, что сборщик хотя бы раз отработал без ошибок: вкладка <b>Actions</b> в репозитории на GitHub."));
+})();
+</script>
+</body>
+</html>
